@@ -1,5 +1,12 @@
 # Managed Keychain
 
+> **실험적 PKI 도구입니다.** 테스트 통과가 운영환경의 신뢰 체인·폐기 적용을
+> 보증하지 않습니다. 운영 전 대상 TLS/MySQL, Kubernetes, 커널/Secure Boot 환경에서
+> 검증하고 CA 상태를 백업하세요. 기본 개인키는 암호화하지 않으며, 이 도구는
+> 노드 신뢰 저장소 등록이나 서비스 재시작을 자동 수행하지 않습니다.
+>
+> [MIT 라이선스](LICENSE)로 제공됩니다.
+
 `managed-keychain`은 OpenSSL을 사용하는 선언형 ECC PKI 도구입니다. **정상 운영
 흐름은 두 명령뿐입니다.** 정책 TOML에 원하는 Root/Intermediate와 leaf의 이름,
 Subject, SAN, 유효기간 세대(generation), `active`/`revoked` 상태를 적고 계획을

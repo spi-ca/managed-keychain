@@ -3,6 +3,8 @@ name = "managed-keychain"
 version = "0.1.0"
 description = "ECC PKI and module-signing material management backed by OpenSSL"
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.13"
 dependencies = []
 
