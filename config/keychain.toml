@@ -13,7 +13,7 @@ digest = "sha384"
 root_validity_days = 36525          # 약 100년
 intermediate_validity_days = 3652   # 약 10년
 leaf_validity_days = 1095           # 약 3년
-crl_refresh_before_days = 7        # CRL 만료 전 갱신 구간
+crl_refresh_before_days = 7         # CRL 유효기간 30일, 만료 7일 전부터 갱신
 
 base_dir = ".."                    # 이 TOML 파일 기준
 openssl_config = "pki.cnf"         # 이 TOML 파일 기준
@@ -38,7 +38,7 @@ organization = "Amazing From Here"
 common_name = "Amazing From Here Root CA"
 
 [subject.module_signing]
-common_name = "spi-ca kernel code-sign"
+common_name = "ARI Family Kernel Module Signing"
 
 # ── 3. 용도별 Intermediate CA ────────────────────────────────
 # 각 도메인에 curve/digest를 추가해 개별 지정할 수 있습니다.
@@ -46,7 +46,9 @@ common_name = "spi-ca kernel code-sign"
 # 공통 Root를 신뢰하는 경우 도메인 간 완전한 신뢰 격리는 아닙니다.
 [domains.tls]
 directory = "state/tls"
-intermediate_common_name = "Amazing From Here TLS Intermediate CA"
+# 내부 이름과 amuz.es 서비스용 사설 TLS CA입니다.
+# 실제 DNS/IP는 leaf SAN에 지정하며, 이 CN 자체가 발급 범위를 제한하지 않습니다.
+intermediate_common_name = "Amazing From Here Internal and amuz.es TLS CA"
 # curve = "P256"
 # digest = "SHA256"
 
@@ -56,7 +58,7 @@ intermediate_common_name = "Amazing From Here Kubernetes Intermediate CA"
 
 [domains.code-signing]
 directory = "state/code-signing"
-intermediate_common_name = "Amazing From Here Code-signing Intermediate CA"
+intermediate_common_name = "Amazing From Here Code Signing Intermediate CA"
 
 # ── 4. 발급 프로파일 ─────────────────────────────────────────
 # OpenSSL 확장 프로파일과 발급 도메인의 연결입니다.
@@ -92,8 +94,8 @@ issuer_domain = "code-signing"
 # [leaves.mysql-server]
 # profile = "tls-server"
 # domain = "tls"
-# common_name = "mysql.internal"
-# san = "DNS:mysql.internal,IP:192.0.2.10"
+# common_name = "mysql.amuz.es"
+# san = "DNS:mysql.amuz.es"          # 예시: 실제 관리하는 접속 이름으로 변경
 # desired = "active"                # active / revoked
 # generation = 1                    # 갱신·키 교체 시 증가
 # revoked_generations = []           # 이전 세대 폐기: 예) [1]
