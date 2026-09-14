@@ -1,0 +1,24 @@
+[project]
+name = "managed-keychain"
+version = "0.1.0"
+description = "ECC PKI and module-signing material management backed by OpenSSL"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
+
+[project.scripts]
+managed-keychain = "managed_keychain.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.9.0,<0.13.0"]
+build-backend = "uv_build"
+
+[tool.uv]
+package = true
+
+[tool.ruff]
+line-length = 100
+
+[tool.pyright]
+pythonVersion = "3.13"
+typeCheckingMode = "basic"

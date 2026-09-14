@@ -1,0 +1,76 @@
+# ECC PKI profiles for the managed keychain.
+# PKI_DIR must point at the CA state directory created by pki.sh.
+# CA private keys stay in PKI_DIR/private and must never be supplied to a
+# kernel build, Kubernetes workload, or MySQL server.
+
+[ ca ]
+default_ca = CA_default
+
+[ CA_default ]
+dir               = $ENV::PKI_DIR
+certificate       = $ENV::CA_CERT
+private_key       = $ENV::CA_KEY
+database          = $dir/db/index.txt
+serial            = $dir/db/serial
+crlnumber         = $dir/db/crlnumber
+crl               = $dir/crl/issuer.crl
+default_crl_days  = 30
+new_certs_dir     = $dir/issued
+policy            = policy_any
+copy_extensions   = none
+default_md        = $ENV::PKI_DIGEST
+default_days      = 3652
+unique_subject    = no
+
+[ policy_any ]
+countryName             = optional
+stateOrProvinceName     = optional
+localityName            = optional
+organizationName        = optional
+organizationalUnitName  = optional
+commonName              = supplied
+emailAddress            = optional
+
+[ req ]
+default_md         = $ENV::PKI_DIGEST
+distinguished_name = req_dn
+prompt             = no
+
+[ req_dn ]
+CN = unused
+
+# Offline root CA. It may issue leaf certificates only, never subordinate CAs.
+[ root_ca ]
+basicConstraints       = critical,CA:TRUE,pathlen:1
+keyUsage               = critical,keyCertSign,cRLSign
+subjectKeyIdentifier   = hash
+authorityKeyIdentifier = keyid:always
+
+[ intermediate_ca ]
+basicConstraints       = critical,CA:TRUE,pathlen:0
+keyUsage               = critical,keyCertSign,cRLSign
+subjectKeyIdentifier   = hash
+authorityKeyIdentifier = keyid:always,issuer
+
+# CERT_SAN is set only while issuing a server leaf.
+[ tls_server ]
+basicConstraints       = critical,CA:FALSE
+keyUsage               = critical,digitalSignature
+extendedKeyUsage       = serverAuth
+subjectAltName         = $ENV::CERT_SAN
+subjectKeyIdentifier   = hash
+authorityKeyIdentifier = keyid,issuer
+
+[ tls_client ]
+basicConstraints       = critical,CA:FALSE
+keyUsage               = critical,digitalSignature
+extendedKeyUsage       = clientAuth
+subjectKeyIdentifier   = hash
+authorityKeyIdentifier = keyid,issuer
+
+[ code_signing ]
+basicConstraints       = critical,CA:FALSE
+keyUsage               = critical,digitalSignature
+extendedKeyUsage       = codeSigning
+subjectKeyIdentifier   = hash
+authorityKeyIdentifier = keyid,issuer

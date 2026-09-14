@@ -1,0 +1,105 @@
+# Managed Keychain 선언형 설정
+# 사용: uv run managed-keychain plan → apply
+# 상세 설명: ../README.md
+
+# ── 1. 공통 정책과 경로 ────────────────────────────────────────
+# 곡선: P256 / P384 / P521 (OpenSSL 이름도 허용)
+# 해시: SHA256 / SHA384 / SHA512
+# 역할별 curve/digest를 생략하면 아래 값을 상속합니다.
+[pki]
+curve = "secp384r1"
+digest = "sha384"
+
+root_validity_days = 36525          # 약 100년
+intermediate_validity_days = 3652   # 약 10년
+leaf_validity_days = 1095           # 약 3년
+crl_refresh_before_days = 7        # CRL 만료 전 갱신 구간
+
+base_dir = ".."                    # 이 TOML 파일 기준
+openssl_config = "pki.cnf"         # 이 TOML 파일 기준
+
+[paths]                           # 상대 상태 경로는 base_dir 기준
+root_dir = "state/ca"
+kernel_dir = "state/kernel"
+
+# Root의 키 곡선·서명 해시를 별도로 지정하려면 활성화합니다.
+# [pki.root]
+# curve = "P384"
+# digest = "SHA384"
+
+# ── 2. 공통 Subject ──────────────────────────────────────────
+[subject]
+country = "KR"
+state = "Seoul"
+locality = "Seoul"
+organization = "Amazing From Here"
+
+[subject.root_ca]
+common_name = "Amazing From Here Root CA"
+
+[subject.module_signing]
+common_name = "spi-ca kernel code-sign"
+
+# ── 3. 용도별 Intermediate CA ────────────────────────────────
+# 각 도메인에 curve/digest를 추가해 개별 지정할 수 있습니다.
+# curve는 Intermediate 키, digest는 자식 인증서·CRL 서명에 사용합니다.
+# 공통 Root를 신뢰하는 경우 도메인 간 완전한 신뢰 격리는 아닙니다.
+[domains.tls]
+directory = "state/tls"
+intermediate_common_name = "Amazing From Here TLS Intermediate CA"
+# curve = "P256"
+# digest = "SHA256"
+
+[domains.kubernetes]
+directory = "state/kubernetes"
+intermediate_common_name = "Amazing From Here Kubernetes Intermediate CA"
+
+[domains.code-signing]
+directory = "state/code-signing"
+intermediate_common_name = "Amazing From Here Code-signing Intermediate CA"
+
+# ── 4. 발급 프로파일 ─────────────────────────────────────────
+# OpenSSL 확장 프로파일과 발급 도메인의 연결입니다.
+[profiles.tls_server]
+extension = "tls_server"
+requires_san = true
+issuer_domain = "tls"
+
+[profiles.tls_client]
+extension = "tls_client"
+requires_san = false
+issuer_domain = "tls"
+
+[profiles.kubernetes_server]
+extension = "tls_server"
+requires_san = true
+issuer_domain = "kubernetes"
+
+[profiles.kubernetes_client]
+extension = "tls_client"
+requires_san = false
+issuer_domain = "kubernetes"
+
+[profiles.code_signing]
+extension = "code_signing"
+requires_san = false
+issuer_domain = "code-signing"
+
+# ── 5. 인증서 선언 ───────────────────────────────────────────
+# 아래 예시는 비활성입니다. 현재 apply는 CA 계층만 생성합니다.
+# 실제 이름·SAN으로 수정하고 주석을 해제해 인증서를 추가하세요.
+#
+# [leaves.mysql-server]
+# profile = "tls-server"
+# domain = "tls"
+# common_name = "mysql.internal"
+# san = "DNS:mysql.internal,IP:192.0.2.10"
+# desired = "active"                # active / revoked
+# generation = 1                    # 갱신·키 교체 시 증가
+# revoked_generations = []           # 이전 세대 폐기: 예) [1]
+# curve = "P256"                    # leaf 키 곡선
+# digest = "SHA256"                 # CSR 서명 해시
+#
+# leaf 인증서 자체의 서명 해시는 발급 Intermediate의 digest를 따릅니다.
+# 기존 세대의 Subject·SAN·알고리즘 변경은 새 generation으로 발급합니다.
+# 폐기된 세대는 재활성화하지 않으며 발급 이력은 유지됩니다.
